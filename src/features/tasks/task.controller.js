@@ -3,6 +3,7 @@ import {
   createTaskService,
   deleteTaskService,
   getTasksService,
+  reorderTasksService,
   updateTaskService,
 } from "./task.service.js";
 
@@ -32,6 +33,15 @@ export const updateTask = asyncHandler(async (req, res) => {
     success: true,
     message: "Task updated successfully",
     task,
+  });
+});
+
+export const reorderTasks = asyncHandler(async (req, res) => {
+  await reorderTasksService(req.user._id, req.validatedBody.ids);
+
+  res.status(200).json({
+    success: true,
+    message: "Tasks reordered successfully",
   });
 });
 
