@@ -25,6 +25,10 @@ const createUser = new mongoose.Schema(
       type: String,
       default: "",
     },
+    profilePicturePublicId: {
+      type: String,
+      default: "",
+    },
     resetPasswordToken: {
       type: String,
       select: false,

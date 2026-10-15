@@ -6,8 +6,8 @@ import { createError } from "../../shared/errors/custom-error.js";
 
 const boardQuery = () =>
   Board.find()
-    .populate("owner", "userName email")
-    .populate("members.user", "userName email");
+    .populate("owner", "userName email profilePicture")
+    .populate("members.user", "userName email profilePicture");
 
 const sameId = (left, right) => String(left) === String(right);
 

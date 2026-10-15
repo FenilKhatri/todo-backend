@@ -33,6 +33,7 @@ export const signupSchema = z.object({
 export const loginSchema = z.object({
   email: emailSchema,
   password: z.string().min(1, "Password is required!"),
+  rememberMe: z.boolean().optional().default(false),
 });
 
 // Forgot password schema
@@ -40,8 +41,14 @@ export const forgotPasswordSchema = z.object({
   email: emailSchema,
 });
 
-// Reset password schema
-export const resetPasswordSchema = z.object({
-  email: emailSchema,
-  password: passwordSchema,
-});
+// Reset password schema (after the OTP is verified)
+export const resetPasswordSchema = z
+  .object({
+    resetToken: z.string().regex(/^[a-f\d]{64}$/i, "Reset token is invalid."),
+    password: passwordSchema,
+    confirmPassword: z.string().min(1, "Please confirm your new password."),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match.",
+    path: ["confirmPassword"],
+  });
