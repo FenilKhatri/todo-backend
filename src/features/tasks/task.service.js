@@ -28,7 +28,15 @@ export const createTaskService = async (ownerId, taskData) => {
 };
 
 export const getTasksService = async (ownerId) => {
-  return withBoard(Task.find({ owner: ownerId })).sort({ createdAt: -1 });
+  return withBoard(Task.find({ owner: ownerId })).sort({ order: 1, createdAt: -1 });
+};
+
+export const reorderTasksService = async (ownerId, ids) => {
+  await Task.bulkWrite(
+    ids.map((id, index) => ({
+      updateOne: { filter: { _id: id, owner: ownerId }, update: { order: index } },
+    })),
+  );
 };
 
 export const updateTaskService = async (ownerId, taskId, updates) => {
@@ -52,5 +60,5 @@ export const deleteTaskService = async (ownerId, taskId) => {
 };
 
 export const getBoardTasksService = async (boardId) => {
-  return withBoard(Task.find({ board: boardId })).sort({ createdAt: -1 });
+  return withBoard(Task.find({ board: boardId })).sort({ order: 1, createdAt: -1 });
 };

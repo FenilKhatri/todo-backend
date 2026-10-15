@@ -45,6 +45,10 @@ export const createTaskSchema = z.object({
   boardId: taskFields.boardId,
 });
 
+export const reorderTasksSchema = z.object({
+  ids: z.array(z.string().regex(/^[a-f\d]{24}$/i, "Task is invalid.")).max(1000),
+});
+
 export const updateTaskSchema = z
   .object({
     title: taskFields.title.optional(),
