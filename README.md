@@ -1,209 +1,258 @@
 # Taskora — Backend API
 
-The REST API behind **Taskora**, a task manager with boards, view-only board sharing, profiles with photo upload, and OTP-verified account changes.
+The REST API behind **Taskora**, a task manager with boards, view-only board sharing, profile photo uploads, and OTP-verified account changes.
 
-It's built with **Express 5**, **MongoDB (Mongoose 9)** and **Zod**, and stores avatars on **Cloudinary**. The web app lives in the [Taskora frontend](https://github.com/FenilKhatri/upmetrics-todo-frontend) repository.
+Built with **Express 5**, **MongoDB (Mongoose 9)**, and **Zod**, Taskora stores profile photos on **Cloudinary**. The web application is available in the [Taskora frontend](https://github.com/FenilKhatri/todo-frontend) repository.
 
 ## Features
 
-- **Auth.** Register, log in and log out with a JWT in an http-only cookie. "Remember me" keeps you logged in for 30 days; without it you get a session cookie and a 1-day token.
-- **Tasks.** Create, list, update and delete your tasks, with priority, status, due date and an optional board.
-- **Boards.**
-  - Create, rename and delete boards. Deleting a board keeps its tasks; they move to General.
-  - Share a board view-only by email, remove viewers, or leave a board shared with you.
-- **Users.** Search people by name or email. An empty search returns 5 suggestions: people you've already worked with first, then other users.
-- **Profile.**
+- **Authentication:** Register, log in, and log out using a JWT stored in an HTTP-only cookie. "Remember me" keeps users logged in for 30 days; otherwise, the session uses a session cookie and a 1-day token.
+- **Tasks:** Create, list, update, and delete tasks with priority, status, due date, and an optional board.
+- **Boards:**
+  - Create, rename, and delete boards.
+  - Deleting a board preserves its tasks by moving them to General.
+  - Share boards with view-only access, remove viewers, or leave a board shared with you.
+- **User search:** Search people by name or email. Empty searches return five suggestions, prioritising people you've interacted with before.
+- **Profile:**
   - Update your name.
   - Upload or remove a profile photo.
   - Change your email or password after OTP verification.
-- **Forgot password.** Email → OTP → a short-lived reset token → a new password.
-- **Avatars on Cloudinary.**
-  - Stored in the `todo` folder as `todo/<name-slug>_<userId>`.
-  - The image is renamed automatically when the user changes their name.
-  - Uploads must be JPG, PNG, WEBP or GIF and **under 5 MB**, and are cropped to 400×400.
-- **Validation.** Every request body is validated with Zod, and errors come back as field-level messages.
+- **Forgot password:** Verify an OTP, receive a short-lived reset token, and set a new password.
+- **Cloudinary avatars:**
+  - Stored in the `todo` folder using the `todo/<name-slug>_<userId>` naming convention.
+  - Avatar filenames are updated when a user's name changes.
+  - Supports JPG, PNG, WEBP, and GIF images under 5 MB, cropped to 400 × 400 pixels.
+- **Validation:** Every request body is validated with Zod, with field-level error messages for invalid input.
 
-> **Note:** there is no email or SMS provider yet, so OTP endpoints **return the code in the response** for the app to display. Remove the code from the response once real email delivery is added.
+> **Note:** Email and SMS delivery are not configured yet. OTP endpoints return the code in the response for the application to display. Remove the OTP from responses when real email delivery is implemented.
 
-## Tech stack
+## Tech Stack
 
-| Purpose | Library |
-| --- | --- |
+| Purpose | Technology |
+|---|---|
 | Server | Express 5 |
 | Database | MongoDB with Mongoose 9 |
 | Validation | Zod 4 |
-| Auth | jsonwebtoken, bcryptjs, cookie-parser |
-| Uploads | multer (memory storage) and Cloudinary |
-| Protection | express-rate-limit, cors |
+| Authentication | jsonwebtoken, bcryptjs, cookie-parser |
+| File uploads | multer (memory storage) and Cloudinary |
+| Protection | express-rate-limit and cors |
 
-## Getting started
+## Getting Started
 
 ### Prerequisites
 
 - Node.js 20+
 - A MongoDB database (MongoDB Atlas or a local instance)
-- A Cloudinary account, needed for profile photos
+- A Cloudinary account for profile photos
 
-### Setup
+### Installation
 
 ```bash
-git clone https://github.com/FenilKhatri/upmetrics-todo-backend.git
-cd upmetrics-todo-backend
+git clone https://github.com/FenilKhatri/todo-backend.git
+cd todo-backend
 npm install
-cp .env.example .env   # then fill in the values below
+```
+
+Create a `.env` file from `.env.example` and configure the environment variables listed below.
+
+On Windows PowerShell:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+Start the development server:
+
+```bash
 npm run dev
 ```
 
-The API starts on `http://localhost:<PORT>`. Check it's running at `GET /api/health`.
+The API starts at `http://localhost:<PORT>`. Check that the server is running using `GET /api/health`.
 
-### Environment variables
+### Environment Variables
 
 | Variable | Description |
-| --- | --- |
-| `PORT` | Port to listen on. Use `3000` to match the frontend's default `VITE_API_URL`. Defaults to `5000` if unset. |
+|---|---|
+| `PORT` | Port used by the server. Defaults to `5000`; use `3000` to match the frontend's default API URL. |
 | `MONGO_URI` | MongoDB connection string |
-| `JWT_SECRET` | Secret used to sign auth tokens. Use a long random string. |
+| `JWT_SECRET` | Long, random secret used to sign authentication tokens |
 | `CLOUDINARY_CLOUD_NAME` | Cloudinary cloud name |
 | `CLOUDINARY_API_KEY` | Cloudinary API key |
 | `CLOUDINARY_API_SECRET` | Cloudinary API secret |
-| `NODE_ENV` | `development` adds stack traces to error responses. `production` marks cookies `secure`, so they need HTTPS. |
-| `FRONTEND_URL` | Extra origin allowed by CORS. `http://localhost:5173` and `5174` are always allowed. |
+| `NODE_ENV` | Set to `development` or `production`. Production cookies require HTTPS when marked secure. |
+| `FRONTEND_URL` | Additional frontend origin allowed by CORS. `http://localhost:5173` and `http://localhost:5174` are always allowed. |
 
-Never commit `.env`; it's already listed in `.gitignore`.
+**Security:** Never commit your `.env` file. It should remain excluded through `.gitignore`.
 
-### Scripts
+### Available Scripts
 
-| Command | What it does |
-| --- | --- |
-| `npm run dev` | Start with nodemon, which restarts on file changes |
-| `npm start` | Start the server (also uses nodemon) |
+| Command | Description |
+|---|---|
+| `npm run dev` | Start the server with nodemon and automatically restart on file changes |
+| `npm start` | Start the server using the configured start script |
 
-## API reference
+## API Reference
 
-All routes are prefixed with `/api`. Routes marked 🔒 need the auth cookie, which is set by register or login. Clients must send cookies with every request (`withCredentials: true` in Axios).
+All routes are prefixed with `/api`. Routes marked 🔒 require authentication through the HTTP-only cookie set during registration or login.
 
-### Auth — `/api/auth`
+Clients must send cookies with requests. With Axios, configure `withCredentials: true`.
+
+### Authentication — `/api/auth`
 
 | Method | Path | Body | Description |
-| --- | --- | --- | --- |
+|---|---|---|---|
 | POST | `/register` | `userName, email, password` | Create an account and log in |
-| POST | `/login` | `email, password, rememberMe?` | Log in (30-day cookie when `rememberMe` is true) |
-| GET 🔒 | `/me` | — | Current user |
-| POST 🔒 | `/logout` | — | Clear the auth cookie |
-| POST | `/forgot-password` | `email` | Start a reset. Returns `{ requestId, otp, expiresAt, email }`, or 404 if no account has that email. |
-| POST | `/forgot-password/:requestId/resend` | — | Issue a new code |
-| POST | `/forgot-password/:requestId/verify` | `otp` | Verify the code. Returns `{ resetToken, expiresAt }`, valid for 15 minutes. |
-| POST | `/forgot-password/:requestId/reset` | `resetToken, password, confirmPassword` | Set the new password |
+| POST | `/login` | `email, password, rememberMe?` | Log in; `rememberMe` enables a 30-day cookie |
+| GET 🔒 | `/me` | — | Get the current user |
+| POST 🔒 | `/logout` | — | Clear the authentication cookie |
+| POST | `/forgot-password` | `email` | Start password reset; returns `requestId`, `otp`, `expiresAt`, and `email`, or 404 if no account exists |
+| POST | `/forgot-password/:requestId/resend` | — | Issue a new OTP |
+| POST | `/forgot-password/:requestId/verify` | `otp` | Verify the OTP and return a reset token valid for 15 minutes |
+| POST | `/forgot-password/:requestId/reset` | `resetToken, password, confirmPassword` | Set a new password |
 
-The forgot-password routes are rate-limited to **30 requests per 15 minutes per IP**.
+Forgot-password routes are rate-limited to **30 requests per 15 minutes per IP**.
 
 ### Tasks — `/api/tasks` 🔒
 
 | Method | Path | Body | Description |
-| --- | --- | --- | --- |
-| GET | `/` | — | Your tasks, newest first, with the board name attached |
-| POST | `/` | `title, description?, priority?, dueDate?, boardId?` | Create a task. Status always starts as `todo`. |
-| PATCH | `/:taskId` | any of the create fields, plus `status` | Update a task |
+|---|---|---|---|
+| GET | `/` | — | List your tasks, newest first, with board names |
+| POST | `/` | `title, description?, priority?, dueDate?, boardId?` | Create a task; status starts as `todo` |
+| PATCH | `/:taskId` | Task fields and optional `status` | Update a task |
 | DELETE | `/:taskId` | — | Delete a task |
 
-- `priority`: `low`, `medium` or `high`
-- `status`: `todo`, `in-progress` or `completed`
+Supported values:
+
+- `priority`: `low`, `medium`, or `high`
+- `status`: `todo`, `in-progress`, or `completed`
 - `dueDate`: `YYYY-MM-DD`, or `null` for no date
 
 ### Boards — `/api/boards` 🔒
 
 | Method | Path | Body | Description |
-| --- | --- | --- | --- |
-| GET | `/` | — | Boards you own or that are shared with you, with `taskCount` and `canEdit` |
+|---|---|---|---|
+| GET | `/` | — | List owned or shared boards with `taskCount` and `canEdit` |
 | POST | `/` | `name, description?` | Create a board |
-| GET | `/:boardId` | — | Board details with its tasks (owner or viewer) |
-| PATCH | `/:boardId` | `name?, description?` | Update a board (owner only) |
-| DELETE | `/:boardId` | — | Delete a board (owner only). Its tasks move to General. |
-| POST | `/:boardId/members` | `email` | Share the board view-only |
+| GET | `/:boardId` | — | Get board details and tasks; available to owners and viewers |
+| PATCH | `/:boardId` | `name?, description?` | Update a board; owner only |
+| DELETE | `/:boardId` | — | Delete a board; owner only. Tasks move to General. |
+| POST | `/:boardId/members` | `email` | Share a board as view-only |
 | DELETE | `/:boardId/members/:memberId` | — | Remove a viewer |
-| DELETE | `/:boardId/leave` | — | Leave a board shared with you |
+| DELETE | `/:boardId/leave` | — | Leave a shared board |
 
 ### Users — `/api/users` 🔒
 
 | Method | Path | Query | Description |
-| --- | --- | --- | --- |
-| GET | `/search` | `q?, boardId?` | Empty `q` returns 5 suggestions, leaving out anyone already on `boardId`. With 2 or more characters it searches by name or email (max 5 results). |
+|---|---|---|---|
+| GET | `/search` | `q?, boardId?` | Search users by name or email. Empty queries return up to five suggestions, excluding existing members of the specified board. Queries of at least two characters return up to five matches. |
 
 ### Profile — `/api/profile` 🔒
 
 | Method | Path | Body | Description |
-| --- | --- | --- | --- |
-| GET | `/` | — | Your profile |
-| PATCH | `/` | `userName` | Update your name (also renames your Cloudinary avatar) |
-| PUT | `/avatar` | `multipart/form-data` with an `avatar` field | Upload a profile photo (under 5 MB) |
+|---|---|---|---|
+| GET | `/` | — | Get your profile |
+| PATCH | `/` | `userName` | Update your name and rename your Cloudinary avatar |
+| PUT | `/avatar` | `multipart/form-data` with an `avatar` field | Upload a profile photo under 5 MB |
 | DELETE | `/avatar` | — | Remove your profile photo |
-| POST | `/change-requests` | `{ type: "email", email }` or `{ type: "password", currentPassword, newPassword, confirmPassword }` | Start an email or password change. Returns an OTP challenge. |
-| POST | `/change-requests/:requestId/resend` | — | Issue a new code |
-| POST | `/change-requests/:requestId/verify` | `otp` | Verify the code and apply the change |
+| POST | `/change-requests` | Email or password change details | Start an email or password change and receive an OTP challenge |
+| POST | `/change-requests/:requestId/resend` | — | Issue a new OTP |
+| POST | `/change-requests/:requestId/verify` | `otp` | Verify the OTP and apply the requested change |
+
+Email change body:
+
+```json
+{
+  "type": "email",
+  "email": "new@example.com"
+}
+```
+
+Password change body:
+
+```json
+{
+  "type": "password",
+  "currentPassword": "current-password",
+  "newPassword": "new-password",
+  "confirmPassword": "new-password"
+}
+```
 
 ### Dashboard — `/api/dashboard` 🔒
 
 | Method | Path | Description |
-| --- | --- | --- |
-| GET | `/` | `{ total, completed, overdue }` task counts |
+|---|---|---|
+| GET | `/` | Return task counts: `total`, `completed`, and `overdue` |
 
-### Error format
+### Error Responses
 
-Validation errors (400):
+Validation errors return HTTP 400 with field-level details:
 
 ```json
 {
   "success": false,
   "message": "Validation failed",
-  "errors": [{ "field": "email", "message": "Email must be valid." }]
+  "errors": [
+    {
+      "field": "email",
+      "message": "Email must be valid."
+    }
+  ]
 }
 ```
 
-Other errors:
+Other errors follow this format:
 
 ```json
-{ "success": false, "statusCode": 404, "message": "Board not found" }
+{
+  "success": false,
+  "statusCode": 404,
+  "message": "Board not found"
+}
 ```
 
-## How OTP verification works
+## How OTP Verification Works
 
-The shared OTP module lives in `src/shared/otp/`. Email change, password change and password reset all use it.
+The shared OTP module lives in `src/shared/otp/`. Email changes, password changes, and password resets use this module.
 
-- **Codes:** 6 digits, stored only as a SHA-256 hash, valid for **10 minutes**.
-- **Attempts:** after **5 wrong attempts** you have to request a new code.
-- **Resends:** limited to one every **5 seconds** (tracked with `sentAt`).
-- **One pending request:** requesting a new code for the same action replaces the old one.
-- **Cleanup:** MongoDB deletes expired requests automatically through a TTL index on `expiresAt`.
-- **Pending changes:** a new email or a new password hash is held on the request and applied only after the code is verified.
-- **Password reset:** verifying the code issues a one-time reset token (also stored hashed). Only that token can set the new password, and the new password must differ from the old one.
-- **Same-email check:** changing to your current email is rejected, including variants of the same mailbox: capitalisation, `+tags`, Gmail dots and `googlemail.com`.
+- **Code length:** Six digits, stored as a SHA-256 hash and valid for 10 minutes.
+- **Attempt limit:** Five incorrect attempts require a new OTP.
+- **Resend cooldown:** One OTP every five seconds, tracked using `sentAt`.
+- **Pending requests:** A new request for the same action replaces the previous one.
+- **Automatic cleanup:** MongoDB removes expired requests using a TTL index on `expiresAt`.
+- **Pending changes:** A new email or password hash is held until OTP verification succeeds.
+- **Password reset:** Successful OTP verification issues a one-time reset token, stored as a hash. The token is required to set the new password, which must differ from the existing password.
+- **Email normalisation:** Changing to the current email is rejected, including equivalent forms covered by the application's canonical-email rules.
 
-## Project structure
+## Project Structure
 
-```
+```text
 server.js                     # Starts the server and connects to MongoDB
 src/
-├── app.js                    # Express app: CORS, JSON, cookies, routes, error handler
-├── routes/route.js           # Mounts feature routers (public auth, then authenticated)
-├── config/                   # db.js (Mongo connection), cloudinary.js (lazy config)
+├── app.js                    # Express app, CORS, cookies, routes, error handling
+├── routes/
+│   └── route.js               # Mounts feature routers
+├── config/
+│   ├── db.js                  # MongoDB connection
+│   └── cloudinary.js          # Cloudinary configuration
 ├── features/
-│   ├── auth/                 # register, login, remember me, forgot password
-│   ├── tasks/                # task CRUD
-│   ├── boards/               # board CRUD, sharing, members
-│   ├── users/                # user search and suggestions
-│   ├── profile/              # profile, avatar upload/rename, email/password change
-│   └── dashboard/            # summary counts
+│   ├── auth/                  # Registration, login, password reset
+│   ├── tasks/                 # Task operations
+│   ├── boards/                # Boards, sharing, members
+│   ├── users/                  # User search and suggestions
+│   ├── profile/                # Profile, avatars, email/password changes
+│   └── dashboard/             # Dashboard summary counts
 └── shared/
-    ├── otp/                  # OtpRequest model, OTP service, OTP validation
-    ├── middleware/           # authenticate, validate (zod), upload-image (multer), rate-limit, error-handler
-    ├── utils/                # generate-token, asynch-handler, canonical-email
-    └── errors/               # createError helper
+    ├── otp/                   # OTP model, service, and validation
+    ├── middleware/            # Authentication, validation, uploads, rate limits
+    ├── utils/                 # Token generation, async handler, canonical email
+    └── errors/                # Error helpers
 ```
 
-Each feature has the same layers: `*.routes.js` → `*.validation.js` (Zod) → `*.controller.js` → `*.service.js` → model.
+Each feature follows a layered architecture:
+
+`*.routes.js` → `*.validation.js` → `*.controller.js` → `*.service.js` → model
 
 ## Related
 
-- Frontend app: https://github.com/FenilKhatri/upmetrics-todo-frontend
-#   t o d o - b a c k e n d  
- 
+- [Taskora Frontend](https://github.com/FenilKhatri/todo-frontend)
