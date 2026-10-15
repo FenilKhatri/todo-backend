@@ -13,7 +13,10 @@ const allowedOrigins = [
   process.env.FRONTEND_URL,
   "http://localhost:5173",
   "http://localhost:5174",
-].filter(Boolean);
+  "https://37p64r71-5173.inc1.devtunnels.ms",
+]
+  .filter(Boolean)
+  .map((url) => url.trim().replace(/\/+$/, ""));
 
 app.use(
   cors({
